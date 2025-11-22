@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String   @id @default(cuid())
+  name                String?
+  first_name          String?
+  last_name           String?
+  email               String   @unique
+  password_hash       String
+  avatar_url          String?
+  phone               String?
+  locale              String?  @default("fr-FR")
+  timezone            String?  @default("Europe/Paris")
+  date_format         String?  @default("dd/MM/yyyy")
+  time_format         String?  @default("HH:mm")
+  theme_preference    String?  @default("system")
+  accent_color        String?  @default("emerald")
+  marketing_emails    Boolean  @default(false)
+  push_events         Boolean  @default(true)
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+  active_household_id String?
+
+  memberships      Membership[]
+  sessions         Session[]
+  invites_created  Invite[]     @relation("InviteCreator")
+  invites_used     Invite[]     @relation("InviteUsedBy")
+  bookings         Booking[]
+  households_owned Household[]  @relation("OwnerHouseholds")
+  active_household Household?   @relation("UserActiveHousehold", fields: [active_household_id], references: [id])
+  polls_created    Poll[]       @relation("PollCreator")
+  poll_votes       PollVote[]
+
+  @@index([email])
+}
+
+model Household {
+  id         String   @id @default(cuid())
+  name       String
+  city       String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  owner_id   String
+
+  owner        User               @relation("OwnerHouseholds", fields: [owner_id], references: [id])
+  settings     HouseholdSettings?
+  memberships  Membership[]
+  invites      Invite[]
+  resources    Resource[]
+  bookings     Booking[]
+  active_users User[]             @relation("UserActiveHousehold")
+  Session      Session[]
+  polls        Poll[]
+
+  @@index([owner_id])
+}
+
+model HouseholdSettings {
+  id                     String  @id @default(cuid())
+  household_id           String  @unique
+  currency               String  @default("EUR")
+  week_start             String  @default("mon")
+  timezone               String  @default("Europe/Paris")
+  enable_meal_planning   Boolean @default(false)
+  enable_laundry_booking Boolean @default(true)
+  enable_shared_expenses Boolean @default(true)
+  enable_tasks           Boolean @default(false)
+  enable_calendar        Boolean @default(false)
+  enable_shopping_list   Boolean @default(false)
+  enable_inventory       Boolean @default(false)
+  enable_announcements   Boolean @default(false)
+  enable_polls           Boolean @default(false)
+
+  household Household @relation(fields: [household_id], references: [id])
+}
+
+model Membership {
+  id           String   @id @default(cuid())
+  user_id      String
+  household_id String
+  role         String   @default("member")
+  created_at   DateTime @default(now())
+
+  user      User      @relation(fields: [user_id], references: [id])
+  household Household @relation(fields: [household_id], references: [id])
+
+  @@unique([user_id, household_id])
+  @@index([household_id])
+}
+
+model Invite {
+  token        String    @id
+  household_id String
+  email        String?
+  role         String    @default("member")
+  created_by   String
+  expires_at   DateTime
+  used_by      String?
+  used_at      DateTime?
+  created_at   DateTime  @default(now())
+
+  household Household @relation(fields: [household_id], references: [id])
+  creator   User      @relation("InviteCreator", fields: [created_by], references: [id])
+  usedBy    User?     @relation("InviteUsedBy", fields: [used_by], references: [id])
+}
+
+model Resource {
+  id           String   @id @default(cuid())
+  household_id String
+  name         String
+  slug         String
+  type         String   @default("washer")
+  created_at   DateTime @default(now())
+
+  household Household @relation(fields: [household_id], references: [id])
+  bookings  Booking[]
+
+  @@unique([household_id, slug])
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  household_id String
+  resource_id  String
+  user_id      String
+  starts_at    DateTime
+  ends_at      DateTime
+  note         String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  household Household @relation(fields: [household_id], references: [id])
+  resource  Resource  @relation(fields: [resource_id], references: [id])
+  user      User      @relation(fields: [user_id], references: [id])
+
+  @@index([household_id])
+  @@index([resource_id, starts_at])
+}
+
+model Session {
+  id                  String   @id @default(cuid())
+  user_id             String
+  token_hash          String   @unique
+  active_household_id String?
+  created_at          DateTime @default(now())
+  expires_at          DateTime
+
+  user             User       @relation(fields: [user_id], references: [id])
+  active_household Household? @relation(fields: [active_household_id], references: [id])
+
+  @@index([user_id])
+}
+
+model Poll {
+  id           String   @id @default(cuid())
+  household_id String
+  question     String
+  description  String?
+  status       String   @default("open")
+  created_by   String
+  created_at   DateTime @default(now())
+
+  household Household    @relation(fields: [household_id], references: [id])
+  creator   User         @relation("PollCreator", fields: [created_by], references: [id])
+  options   PollOption[]
+  votes     PollVote[]
+
+  @@index([household_id])
+}
+
+model PollOption {
+  id      String @id @default(cuid())
+  poll_id String
+  label   String
+
+  poll  Poll       @relation(fields: [poll_id], references: [id])
+  votes PollVote[]
+
+  @@index([poll_id])
+}
+
+model PollVote {
+  id         String   @id @default(cuid())
+  poll_id    String
+  option_id  String
+  user_id    String
+  created_at DateTime @default(now())
+
+  poll   Poll       @relation(fields: [poll_id], references: [id])
+  option PollOption @relation(fields: [option_id], references: [id])
+  user   User       @relation(fields: [user_id], references: [id])
+
+  @@unique([poll_id, user_id])
+  @@index([option_id])
+}
