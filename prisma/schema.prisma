@@ -28,15 +28,18 @@ model User {
   updated_at          DateTime @updatedAt
   active_household_id String?
 
-  memberships      Membership[]
-  sessions         Session[]
-  invites_created  Invite[]     @relation("InviteCreator")
-  invites_used     Invite[]     @relation("InviteUsedBy")
-  bookings         Booking[]
-  households_owned Household[]  @relation("OwnerHouseholds")
-  active_household Household?   @relation("UserActiveHousehold", fields: [active_household_id], references: [id])
-  polls_created    Poll[]       @relation("PollCreator")
-  poll_votes       PollVote[]
+  memberships        Membership[]
+  sessions           Session[]
+  invites_created    Invite[]             @relation("InviteCreator")
+  invites_used       Invite[]             @relation("InviteUsedBy")
+  bookings           Booking[]
+  households_owned   Household[]          @relation("OwnerHouseholds")
+  active_household   Household?           @relation("UserActiveHousehold", fields: [active_household_id], references: [id])
+  polls_created      Poll[]               @relation("PollCreator")
+  poll_votes         PollVote[]
+  expenses_paid      Expense[]            @relation("ExpensePayer")
+  ExpenseParticipant ExpenseParticipant[]
+  calendar_events    CalendarEvent[]
 
   @@index([email])
 }
@@ -58,6 +61,8 @@ model Household {
   active_users User[]             @relation("UserActiveHousehold")
   Session      Session[]
   polls        Poll[]
+  expenses     Expense[]
+  calendar_events CalendarEvent[]
 
   @@index([owner_id])
 }
@@ -68,15 +73,15 @@ model HouseholdSettings {
   currency               String  @default("EUR")
   week_start             String  @default("mon")
   timezone               String  @default("Europe/Paris")
-  enable_meal_planning   Boolean @default(false)
+  enable_meal_planning   Boolean @default(true)
   enable_laundry_booking Boolean @default(true)
   enable_shared_expenses Boolean @default(true)
-  enable_tasks           Boolean @default(false)
-  enable_calendar        Boolean @default(false)
-  enable_shopping_list   Boolean @default(false)
-  enable_inventory       Boolean @default(false)
-  enable_announcements   Boolean @default(false)
-  enable_polls           Boolean @default(false)
+  enable_tasks           Boolean @default(true)
+  enable_calendar        Boolean @default(true)
+  enable_shopping_list   Boolean @default(true)
+  enable_inventory       Boolean @default(true)
+  enable_announcements   Boolean @default(true)
+  enable_polls           Boolean @default(true)
 
   household Household @relation(fields: [household_id], references: [id])
 }
@@ -199,4 +204,53 @@ model PollVote {
 
   @@unique([poll_id, user_id])
   @@index([option_id])
+}
+
+model Expense {
+  id           String   @id @default(cuid())
+  household_id String
+  payer_id     String
+  amount       Float
+  currency     String
+  label        String
+  note         String?
+  date         DateTime
+  created_at   DateTime @default(now())
+
+  household    Household            @relation(fields: [household_id], references: [id])
+  payer        User                 @relation("ExpensePayer", fields: [payer_id], references: [id])
+  participants ExpenseParticipant[]
+
+  @@index([household_id])
+}
+
+model ExpenseParticipant {
+  id         String @id @default(cuid())
+  expense_id String
+  user_id    String
+  share      Float
+
+  expense Expense @relation(fields: [expense_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+
+  @@index([expense_id])
+}
+
+model CalendarEvent {
+  id           String   @id @default(cuid())
+  household_id String
+  title        String
+  description  String?
+  starts_at    DateTime
+  ends_at      DateTime
+  all_day      Boolean  @default(false)
+  created_by   String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  household Household @relation(fields: [household_id], references: [id])
+  creator   User      @relation(fields: [created_by], references: [id])
+
+  @@index([household_id])
+  @@index([starts_at])
 }

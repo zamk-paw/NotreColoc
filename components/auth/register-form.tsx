@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useTransition } from "react";
@@ -17,7 +17,7 @@ type Props = {
 const initialState: AuthActionState = {};
 
 export function RegisterForm({ csrfToken, hasInvite }: Props) {
-  const [state, formAction] = useFormState(registerAction, initialState);
+  const [state, formAction] = useActionState(registerAction, initialState);
   const [isPending, startTransition] = useTransition();
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { Loader2 } from "lucide-react";
 import { joinWithCodeAction, type JoinState } from "@/app/(onboarding)/actions";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ type Props = {
 const initialState: JoinState = {};
 
 export function JoinCodeForm({ csrfToken }: Props) {
-  const [state, formAction] = useFormState(joinWithCodeAction, initialState);
+  const [state, formAction] = useActionState(joinWithCodeAction, initialState);
   const [isPending, startTransition] = useTransition();
 
   return (

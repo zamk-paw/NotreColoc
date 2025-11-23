@@ -1,3 +1,5 @@
+'use server';
+
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -84,15 +86,11 @@ export async function getSession() {
   });
 
   if (!session) {
-    cookieStore.delete(SESSION_COOKIE);
-    cookieStore.delete(SESSION_META_COOKIE);
     return null;
   }
 
   if (isBefore(session.expires_at, new Date())) {
     await db.session.delete({ where: { id: session.id } });
-    cookieStore.delete(SESSION_COOKIE);
-    cookieStore.delete(SESSION_META_COOKIE);
     return null;
   }
 

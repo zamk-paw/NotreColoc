@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -14,7 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { createExpenseAction, type ExpenseActionState } from "@/app/(app)/actions/expenses";
+
+const initialState: ExpenseActionState = {};
 
 type Member = {
   id: string;
@@ -23,31 +25,33 @@ type Member = {
 
 type Props = {
   members: Member[];
+  csrfToken: string;
 };
 
-export function ExpenseModal({ members }: Props) {
-  const [open, setOpen] = useState(false);
+export function ExpenseModal({ members, csrfToken }: Props) {
+  const [state, formAction, pending] = useActionState(createExpenseAction, initialState);
+
+  useEffect(() => {
+    if (state.error) {
+      toast.error(state.error);
+    }
+    if (state.success) {
+      toast.success("Dépense ajoutée", { description: "Tout le monde a été pris en compte." });
+    }
+  }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button>Ajouter une dépense</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Nouvelle dépense</DialogTitle>
-          <DialogDescription>Cette fonctionnalité enregistre bientôt les transactions.</DialogDescription>
+          <DialogDescription>Enregistre un achat pour la colocation.</DialogDescription>
         </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            toast.info("Bientôt disponible", {
-              description: "L’ajout de dépense arrivera lors de la prochaine itération.",
-            });
-            setOpen(false);
-          }}
-        >
+        <form className="space-y-4" action={formAction}>
+          <input type="hidden" name="csrfToken" value={csrfToken} />
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="amount">Montant</Label>
@@ -60,16 +64,21 @@ export function ExpenseModal({ members }: Props) {
                 name="currency"
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
               >
-                <option value="EUR">EUR</option>
-                <option value="USD">USD</option>
-                <option value="GBP">GBP</option>
-                <option value="CHF">CHF</option>
+                {["EUR", "USD", "GBP", "CHF"].map((currency) => (
+                  <option key={currency} value={currency}>
+                    {currency}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="label">Titre</Label>
             <Input id="label" name="label" placeholder="Courses du week-end" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="payer">Qui a payé ?</Label>
@@ -90,7 +99,7 @@ export function ExpenseModal({ members }: Props) {
             <div className="grid grid-cols-2 gap-3">
               {members.map((member) => (
                 <label key={member.id} className="inline-flex items-center gap-2 text-sm">
-                  <Checkbox defaultChecked />
+                  <input type="checkbox" name="participants" value={member.id} defaultChecked />
                   <span>{member.name}</span>
                 </label>
               ))}
@@ -100,8 +109,8 @@ export function ExpenseModal({ members }: Props) {
             <Label htmlFor="note">Note</Label>
             <Textarea id="note" name="note" placeholder="Détails optionnels" />
           </div>
-          <Button type="submit" className="w-full">
-            Simuler la dépense
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? "Enregistrement…" : "Ajouter la dépense"}
           </Button>
         </form>
       </DialogContent>

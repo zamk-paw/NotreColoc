@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import { getSession } from "@/lib/auth/session";
 import { getCsrfToken } from "@/lib/csrf";
-import { getRememberedInvite } from "@/lib/invitations";
+import { getInviteToken } from "@/lib/invite-cookie";
 import { Badge } from "@/components/ui/badge";
 
 export default async function LoginPage() {
@@ -13,7 +13,7 @@ export default async function LoginPage() {
   }
 
   const csrfToken = (await getCsrfToken()) ?? "";
-  const hasInvite = Boolean(await getRememberedInvite());
+  const hasInvite = Boolean(await getInviteToken());
 
   return (
     <div className="space-y-8">

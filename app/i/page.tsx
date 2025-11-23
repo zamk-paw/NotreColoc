@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession, setActiveHousehold } from "@/lib/auth/session";
-import { acceptInvite, rememberInviteToken } from "@/lib/invitations";
+import { acceptInvite } from "@/lib/invitations";
+import { getInviteToken } from "@/lib/invite-cookie";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -10,19 +11,16 @@ type Props = {
 
 export default async function InvitePage(props: Props) {
   const searchParams = await props.searchParams;
-  const token = searchParams.t;
+  const token = searchParams.t ?? (await getInviteToken()) ?? undefined;
   const session = await getSession();
 
-  if (token) {
-    await rememberInviteToken(token);
-    if (session) {
-      try {
-        const householdId = await acceptInvite({ token, userId: session.user_id });
-        await setActiveHousehold(householdId);
-        redirect("/accueil");
-      } catch (error) {
-        console.error(error);
-      }
+  if (token && session) {
+    try {
+      const householdId = await acceptInvite({ token, userId: session.user_id });
+      await setActiveHousehold(householdId);
+      redirect("/accueil");
+    } catch (error) {
+      console.error(error);
     }
   }
 

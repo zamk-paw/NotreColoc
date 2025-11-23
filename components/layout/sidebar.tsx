@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { UserMenu } from "@/components/navigation/user-menu";
 import { Badge } from "@/components/ui/badge";
+import { HouseholdSwitcher } from "@/components/navigation/household-switcher";
 
 const ICONS = {
   home: Home,
@@ -41,8 +42,14 @@ type NavItem = {
 
 type Props = {
   navItems: NavItem[];
-  activeHouseholdName?: string | null;
-  hasMultipleHouseholds?: boolean;
+  memberships: Array<{
+    household: {
+      id: string;
+      name: string;
+      city: string | null;
+    };
+  }>;
+  activeHouseholdId?: string | null;
   user: {
     name: string | null;
     email: string;
@@ -50,7 +57,7 @@ type Props = {
   };
 };
 
-export function Sidebar({ navItems, activeHouseholdName, hasMultipleHouseholds, user }: Props) {
+export function Sidebar({ navItems, memberships, activeHouseholdId, user }: Props) {
   const pathname = usePathname();
   return (
     <aside className="sticky top-0 hidden h-screen w-72 min-w-72 flex-col border-r border-border/80 bg-card/80 px-4 py-6 lg:flex">
@@ -61,8 +68,12 @@ export function Sidebar({ navItems, activeHouseholdName, hasMultipleHouseholds, 
           </Badge>
           <span className="text-sm text-muted-foreground">Pilotage quotidien</span>
         </div>
-        {hasMultipleHouseholds && activeHouseholdName ? (
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Colocation : {activeHouseholdName}</p>
+        {memberships.length > 1 ? (
+          <HouseholdSwitcher memberships={memberships} activeHouseholdId={activeHouseholdId} />
+        ) : memberships[0] ? (
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Colocation : {memberships[0].household.name}
+          </p>
         ) : null}
       </div>
       <div className="mt-8 flex h-full flex-col">

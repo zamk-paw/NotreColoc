@@ -35,7 +35,7 @@ export function UserMenu({ user }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start gap-3 rounded-xl border border-border/80 px-3">
+        <Button variant="ghost" className="w-full justify-start gap-3 rounded-xxl border border-border/80 px-3">
           <Avatar className="h-10 w-10">
             {user.avatar_url ? <AvatarImage src={user.avatar_url} alt={user.name ?? user.email} /> : null}
             <AvatarFallback>{initials || user.email.slice(0, 2).toUpperCase()}</AvatarFallback>

@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 const AUTH_ROUTES = ["/login", "/register"];
 const ONBOARDING_ROUTES = ["/integrations", "/colocations/creer", "/i"];
 const CSRF_COOKIE = "nc_csrf";
+const INVITE_COOKIE = "nc_invite_token";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -26,8 +27,21 @@ export function proxy(request: NextRequest) {
     return respond(NextResponse.redirect(loginUrl));
   }
 
-  if (sessionToken && isAuthRoute) {
-    return respond(NextResponse.redirect(new URL("/accueil", request.url)));
+  if (pathname === "/i") {
+    const inviteToken = request.nextUrl.searchParams.get("t");
+    if (inviteToken) {
+      const redirectUrl = new URL(request.url);
+      redirectUrl.searchParams.delete("t");
+      const response = NextResponse.redirect(redirectUrl);
+      response.cookies.set(INVITE_COOKIE, inviteToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+      return respond(response);
+    }
   }
 
   const isOnboardingRoute = ONBOARDING_ROUTES.some((route) => pathname.startsWith(route));

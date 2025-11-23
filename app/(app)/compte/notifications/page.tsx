@@ -2,7 +2,6 @@ import { requireSession } from "@/lib/auth/session";
 import { getCsrfToken } from "@/lib/csrf";
 import { updateNotificationAction } from "@/app/(app)/actions/account";
 import { Button } from "@/components/ui/button";
-import { ModuleToggleField } from "@/components/households/module-toggle-field";
 
 export default async function NotificationsPage() {
   const session = await requireSession();
@@ -11,18 +10,30 @@ export default async function NotificationsPage() {
   return (
     <form action={updateNotificationAction} className="space-y-4">
       <input type="hidden" name="csrfToken" value={csrfToken} />
-      <ModuleToggleField
-        name="household_notifications"
-        label="Notifications de la coloc"
-        description="État des réservations, annonces et rappels."
-        defaultChecked={session.user.push_events ?? true}
-      />
-      <ModuleToggleField
-        name="marketing_emails"
-        label="Emails marketing"
-        description="Recevoir les nouveautés du produit."
-        defaultChecked={session.user.marketing_emails ?? false}
-      />
+      <label className="flex items-center justify-between rounded-2xl border border-border/60 p-4">
+        <div>
+          <p className="font-medium">Notifications de la coloc</p>
+          <p className="text-xs text-muted-foreground">État des réservations, annonces et rappels.</p>
+        </div>
+        <input
+          type="checkbox"
+          name="household_notifications"
+          defaultChecked={session.user.push_events ?? true}
+          className="h-4 w-4 rounded border-input"
+        />
+      </label>
+      <label className="flex items-center justify-between rounded-2xl border border-border/60 p-4">
+        <div>
+          <p className="font-medium">Emails marketing</p>
+          <p className="text-xs text-muted-foreground">Recevoir les nouveautés du produit.</p>
+        </div>
+        <input
+          type="checkbox"
+          name="marketing_emails"
+          defaultChecked={session.user.marketing_emails ?? false}
+          className="h-4 w-4 rounded border-input"
+        />
+      </label>
       <div className="rounded-2xl border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
         Les alertes granulaires (modules, canaux) arriveront bientôt.
       </div>

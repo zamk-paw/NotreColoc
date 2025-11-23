@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { Loader2 } from "lucide-react";
 import { createInviteAction, type InviteActionState } from "@/app/(app)/actions/invitations";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ type Props = {
 const initialState: InviteActionState = {};
 
 export function CreateInviteForm({ csrfToken }: Props) {
-  const [state, formAction] = useFormState(createInviteAction, initialState);
+  const [state, formAction] = useActionState(createInviteAction, initialState);
   const [isPending, startTransition] = useTransition();
 
   return (

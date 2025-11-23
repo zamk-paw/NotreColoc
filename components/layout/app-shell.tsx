@@ -24,17 +24,23 @@ type Props = {
     email: string;
     avatar_url: string | null;
   };
-  activeHouseholdName?: string | null;
-  hasMultipleHouseholds?: boolean;
+  memberships: Array<{
+    household: {
+      id: string;
+      name: string;
+      city: string | null;
+    };
+  }>;
+  activeHouseholdId?: string | null;
 };
 
-export function AppShell({ children, activeHouseholdName, hasMultipleHouseholds, user }: Props) {
+export function AppShell({ children, memberships, activeHouseholdId, user }: Props) {
   return (
     <div className="flex min-h-screen bg-muted/20">
       <Sidebar
         navItems={NAV_LINKS}
-        activeHouseholdName={activeHouseholdName}
-        hasMultipleHouseholds={hasMultipleHouseholds}
+        memberships={memberships}
+        activeHouseholdId={activeHouseholdId}
         user={user}
       />
       <div className="flex-1">

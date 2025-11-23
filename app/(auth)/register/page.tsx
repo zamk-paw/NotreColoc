@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getSession } from "@/lib/auth/session";
 import { getCsrfToken } from "@/lib/csrf";
-import { getRememberedInvite } from "@/lib/invitations";
+import { getInviteToken } from "@/lib/invite-cookie";
 
 export default async function RegisterPage() {
   const session = await getSession();
@@ -11,7 +11,7 @@ export default async function RegisterPage() {
   }
 
   const csrfToken = (await getCsrfToken()) ?? "";
-  const hasInvite = Boolean(await getRememberedInvite());
+  const hasInvite = Boolean(await getInviteToken());
 
   return (
     <div className="space-y-8">

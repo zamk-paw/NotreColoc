@@ -8,7 +8,8 @@ import { loginSchema, registerSchema } from "@/lib/validations/auth";
 import { getUserByEmail } from "@/lib/auth/user";
 import { comparePassword, hashPassword } from "@/lib/auth/password";
 import { createSession, revokeSession } from "@/lib/auth/session";
-import { getRememberedInvite, acceptInvite } from "@/lib/invitations";
+import { acceptInvite } from "@/lib/invitations";
+import { getInviteToken } from "@/lib/invite-cookie";
 import { verifyCsrfToken } from "@/lib/csrf";
 
 export type AuthActionState = {
@@ -111,7 +112,7 @@ export async function logoutAction() {
 }
 
 async function resolveActiveHousehold(userId: string) {
-  const pendingInvite = await getRememberedInvite();
+  const pendingInvite = await getInviteToken();
   if (pendingInvite) {
     try {
       const householdId = await acceptInvite({ token: pendingInvite, userId });
