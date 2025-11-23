@@ -28,9 +28,27 @@ export function RegisterForm({ csrfToken, hasInvite }: Props) {
       }}
     >
       <input type="hidden" name="csrfToken" value={csrfToken} />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">Prénom</Label>
+          <Input id="firstName" name="firstName" required placeholder="Camille" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Nom</Label>
+          <Input id="lastName" name="lastName" required placeholder="Dupont" />
+        </div>
+      </div>
       <div className="space-y-2">
-        <Label htmlFor="name">Nom complet</Label>
-        <Input id="name" name="name" required placeholder="Camille Dupont" />
+        <Label htmlFor="username">Nom d'utilisateur</Label>
+        <Input
+          id="username"
+          name="username"
+          required
+          placeholder="camille_d"
+          pattern="[^\s]+"
+          title="Pas d'espaces autorisés"
+        />
+        <p className="text-xs text-muted-foreground">Ce sera votre pseudo unique (pas d'espaces).</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="email">Adresse email</Label>

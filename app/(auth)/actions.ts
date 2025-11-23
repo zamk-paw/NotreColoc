@@ -35,7 +35,7 @@ export async function loginAction(_: AuthActionState, formData: FormData): Promi
   });
 
   if (!parsed.success) {
-    return { error: parsed.error?.errors?.[0]?.message ?? "Formulaire invalide." };
+    return { error: parsed.error?.issues?.[0]?.message ?? "Formulaire invalide." };
   }
 
   if (!(await verifyCsrfToken(parsed.data.csrfToken))) {
@@ -68,14 +68,16 @@ export async function registerAction(_: AuthActionState, formData: FormData): Pr
   }
 
   const parsed = registerSchema.safeParse({
-    name: formData.get("name"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    username: formData.get("username"),
     email: formData.get("email"),
     password: formData.get("password"),
     csrfToken: formData.get("csrfToken"),
   });
 
   if (!parsed.success) {
-    return { error: parsed.error?.errors?.[0]?.message ?? "Formulaire invalide." };
+    return { error: parsed.error?.issues?.[0]?.message ?? "Formulaire invalide." };
   }
 
   if (!(await verifyCsrfToken(parsed.data.csrfToken))) {
@@ -87,9 +89,20 @@ export async function registerAction(_: AuthActionState, formData: FormData): Pr
     return { error: "Un compte existe déjà avec cet email." };
   }
 
+  const existingUsername = await db.user.findUnique({
+    where: { username: parsed.data.username },
+  });
+
+  if (existingUsername) {
+    return { error: "Ce nom d'utilisateur est déjà pris." };
+  }
+
   const user = await db.user.create({
     data: {
-      name: parsed.data.name,
+      first_name: parsed.data.firstName,
+      last_name: parsed.data.lastName,
+      username: parsed.data.username,
+      name: `${parsed.data.firstName} ${parsed.data.lastName}`,
       email: parsed.data.email.toLowerCase(),
       password_hash: await hashPassword(parsed.data.password),
     },
